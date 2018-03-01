@@ -14,9 +14,11 @@ public class Ride {
 	
 	int realStart;
 	
+	int distanceRide;
+	
 	@Override
 	public String toString() {
-		return "ride from ["+startPosition.x+", "+startPosition.y+"] to ["+finishPosition.x+", "+finishPosition.y+"], earliest start "+earliestStart+", latest finish "+latestFinish;
+		return "ride "+id+" from ["+startPosition.x+", "+startPosition.y+"] to ["+finishPosition.x+", "+finishPosition.y+"], earliest start "+earliestStart+", latest finish "+latestFinish;
 	}
 	
 }
