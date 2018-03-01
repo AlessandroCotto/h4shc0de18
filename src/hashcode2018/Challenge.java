@@ -1,7 +1,6 @@
 package hashcode2018;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +22,7 @@ public class Challenge {
 	static List<Ride> listRides= new ArrayList<>();
 	static List<Vehicle> listVehicles= new ArrayList<>();
 
-	static Map<Integer, ArrayList<Ride>> mapAvailableRides= new HashMap<>();
+	static int totalScore=0;
 	/**
 	 * @param args
 	 */
@@ -31,15 +30,23 @@ public class Challenge {
 		Commons.initLog();
 		long initTS= System.currentTimeMillis();
 		System.out.println("Start!");
-		List<String> l= Commons.readFile("/Users/federicoballarini/Downloads/a_example.in");
-		//List<String> l= Commons.readFile("/Users/federicoballarini/Downloads/b_should_be_easy.in");
+		
+		String fname= "a_example.in";
+		//String fname= "b_should_be_easy.in";
+		//String fname= "c_no_hurry.in";
+		//String fname= "d_metropolis.in";
+		//String fname= "e_high_bonus.in";
+		
+		//8+ 75232+ 8483191+6206927 + 9224520
+		List<String> l= Commons.readFile("/Users/federicoballarini/Downloads/"+fname);
 		//List<String> l= Commons.readFile("/Users/federicoballarini/Downloads/e_high_bonus.in");
 
 		List<String> result= algorithm(l);
 
-		//Commons.saveFile("/Users/federicoballarini/Downloads/giocatore2.csv", result);
+		Commons.saveFile("/Users/federicoballarini/Downloads/res_"+fname+".in", result);
 
 		System.out.println("time elapsed: "+(System.currentTimeMillis()-initTS)+ " ms");
+		System.out.println("Final Score: "+ totalScore);
 		Log.close();
 
 	}
@@ -77,32 +84,31 @@ public class Challenge {
 		System.out.println("size vehicles:"+ listVehicles.size());
 
 
-		for(int t=0; t<numSteps; t++) {
-			for(Ride r: listRides) {
-				if(t>= r.earliestStart) {
-					//start time correct
-					if((t+ Position.difference(r.startPosition, r.finishPosition))<= r.latestFinish) {
-						addValues(t, r, mapAvailableRides);
-						//System.out.println("differenza veicolo-start: "+Position.difference(v.p, r.startPosition)+ " - differenza start-finish:"+ Position.difference(r.startPosition, r.finishPosition));
-					}
-				}
-			}
-
-		}
-
 
 		//cycle on time
 		for(int t=0; t<numSteps; t++) {
+			ArrayList<Ride> arrTimeRides= new ArrayList<>();
+			for(Ride r: listRides) {
+				if(t>= r.earliestStart) {
+					//start time correct
+					r.distanceRide= Position.difference(r.startPosition, r.finishPosition);
+					if((t+ r.distanceRide)<= r.latestFinish) {
+						arrTimeRides.add(r);
+					}
+				}
+			}
 
 			System.out.println("step "+ t);
 			for(Vehicle v: listVehicles) {
 				if(v.r== null) {
 					//free vehicle
-					Ride r= bestRide(v, t);
+					Ride r= bestRide(v, t, arrTimeRides);
 
 					if(r!=null) {
 						listRides.remove(r);
-						calculateScore(v, r);
+						arrTimeRides.remove(r);
+						calculateScore(v, r, t);
+						v.rideDone.add(r.id);
 						System.out.println("set ride: "+ r.id +" for vehicle: "+ v.id);
 						v.setRide(r);
 
@@ -116,14 +122,33 @@ public class Challenge {
 				}
 			}
 		}
+		
+		
+		for(Vehicle v: listVehicles) {
+			ArrayList<Integer> arr= v.rideDone;
+			String s;
+			if(arr.size()!=0) {
+				s= ""+arr.size();
+				for(int i: arr) {
+					s+= " "+i;
+				}
+			}
+			else
+				s="0";
+			
+			result.add(s);
+				
+		}
 
 
 		return result;
 	}
-
-	private static void calculateScore(Vehicle v, Ride r) {
-		
-		
+	
+	static void calculateScore(Vehicle v, Ride r, int t){
+		if((t+ v.distanceToRide)== r.earliestStart) {
+			totalScore+=bonusValue;
+		}
+		totalScore+= r.distanceRide;
 	}
 
 	private static Ride createRide(String s) {
@@ -163,18 +188,17 @@ public class Challenge {
 	 * @param t actual time
 	 * @return
 	 */
-	private static Ride bestRide(Vehicle v, int t) {
+	private static Ride bestRide(Vehicle v, int t, ArrayList<Ride> arrTimeRides) {
 		List<Ride> availableRides= new ArrayList<>();
 		Ride rWin=null;
 
-		if(mapAvailableRides.containsKey(t)) {
-			for(Ride r: mapAvailableRides.get(t)) {
-				if((Position.difference(v.p, r.startPosition) + t)>= r.earliestStart) {
+		if(arrTimeRides!=null) {
+			for(Ride r: arrTimeRides) {
+				v.distanceToRide= Position.difference(v.p, r.startPosition);
+				if((v.distanceToRide + t)>= r.earliestStart) {
 					//start time correct
-					if((Position.difference(v.p, r.startPosition) + t+ Position.difference(r.startPosition, r.finishPosition))<= r.latestFinish) {
+					if((v.distanceToRide + t+ r.distanceRide)<= r.latestFinish) {
 						availableRides.add(r);
-
-						//System.out.println("differenza veicolo-start: "+Position.difference(v.p, r.startPosition)+ " - differenza start-finish:"+ Position.difference(r.startPosition, r.finishPosition));
 					}
 				}
 			}
@@ -182,10 +206,8 @@ public class Challenge {
 			int maxPoints= Integer.MIN_VALUE;
 			for(Ride r: availableRides) {
 				//calculate max 
-				int distanceRide= Position.difference(r.startPosition, r.finishPosition);
-				int distFromRide= Position.difference(v.p, r.startPosition);
-				if((distanceRide- distFromRide) >maxPoints) {
-					maxPoints= (distanceRide- distFromRide);
+				if((r.distanceRide- v.distanceToRide) >maxPoints) {
+					maxPoints= (r.distanceRide- v.distanceToRide);
 					rWin= r;
 				}		
 			}

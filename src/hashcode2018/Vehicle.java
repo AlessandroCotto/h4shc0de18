@@ -1,5 +1,7 @@
 package hashcode2018;
 
+import java.util.ArrayList;
+
 /**
  * classe che gestisce veicolo
  * @author federicoballarini
@@ -13,6 +15,8 @@ public class Vehicle {
 	int distanceToMake=0;
 	
 	int distanceToRide;
+	
+	ArrayList<Integer> rideDone= new ArrayList<>();
 	
 	/**
 	 * setter for ride
