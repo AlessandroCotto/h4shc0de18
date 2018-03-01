@@ -8,5 +8,5 @@ package hashcode2018;
 public class Vehicle {
 	Position p;
 	int id;
-	//percorso assegnato
+	Ride r;
 }
