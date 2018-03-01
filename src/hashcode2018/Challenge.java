@@ -31,8 +31,8 @@ public class Challenge {
 		long initTS= System.currentTimeMillis();
 		System.out.println("Start!");
 		
-		String fname= "a_example.in";
-		//String fname= "b_should_be_easy.in";
+		//String fname= "a_example.in";
+		String fname= "b_should_be_easy.in";
 		//String fname= "c_no_hurry.in";
 		//String fname= "d_metropolis.in";
 		//String fname= "e_high_bonus.in";
@@ -43,7 +43,7 @@ public class Challenge {
 
 		List<String> result= algorithm(l);
 
-		Commons.saveFile("/Users/federicoballarini/Downloads/res_"+fname+".in", result);
+		//Commons.saveFile("/Users/federicoballarini/Downloads/res_"+fname+".in", result);
 
 		System.out.println("time elapsed: "+(System.currentTimeMillis()-initTS)+ " ms");
 		System.out.println("Final Score: "+ totalScore);
@@ -98,21 +98,12 @@ public class Challenge {
 				}
 			}
 
-			System.out.println("step "+ t);
+			ArrayList<Vehicle> arrFreeVehicles= new ArrayList<>();
+			
+			
 			for(Vehicle v: listVehicles) {
 				if(v.r== null) {
-					//free vehicle
-					Ride r= bestRide(v, t, arrTimeRides);
-
-					if(r!=null) {
-						listRides.remove(r);
-						arrTimeRides.remove(r);
-						calculateScore(v, r, t);
-						v.rideDone.add(r.id);
-						System.out.println("set ride: "+ r.id +" for vehicle: "+ v.id);
-						v.setRide(r);
-
-					}
+					arrFreeVehicles.add(v);
 				}
 				else {
 					// -1 all vehicles with distance
@@ -121,6 +112,22 @@ public class Challenge {
 						v.r= null;
 				}
 			}
+			
+			for(Vehicle v: arrFreeVehicles) {
+				//free vehicle
+				Ride r= bestRide(v, t, arrTimeRides);
+
+				if(r!=null) {
+					listRides.remove(r);
+					arrTimeRides.remove(r);
+					calculateScore(v, r, t);
+					v.rideDone.add(r.id);
+					System.out.println("set ride: "+ r.id +" for vehicle: "+ v.id);
+					v.setRide(r);
+				}
+
+			}
+			System.out.println("finish step "+ t+" - free vehicles: "+arrFreeVehicles.size());
 		}
 		
 		
