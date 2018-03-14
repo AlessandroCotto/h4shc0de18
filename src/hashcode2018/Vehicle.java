@@ -27,4 +27,9 @@ public class Vehicle {
 		//distance to arrive to start + distance to complete -1 because first turn move 
 		this.distanceToMake= Position.difference(_r.startPosition, this.p) + Position.difference(_r.startPosition, _r.finishPosition) -1;
 	}
+	
+	@Override
+	public String toString() {
+		return ""+this.id;
+	}
 }

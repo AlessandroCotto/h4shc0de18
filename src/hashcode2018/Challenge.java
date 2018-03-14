@@ -2,7 +2,6 @@ package hashcode2018;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * main class 
@@ -30,13 +29,13 @@ public class Challenge {
 		Commons.initLog();
 		long initTS= System.currentTimeMillis();
 		System.out.println("Start!");
-		
+
 		//String fname= "a_example.in";
 		String fname= "b_should_be_easy.in";
 		//String fname= "c_no_hurry.in";
 		//String fname= "d_metropolis.in";
 		//String fname= "e_high_bonus.in";
-		
+
 		//8+ 75232+ 8483191+6206927 + 9224520
 		List<String> l= Commons.readFile("/Users/federicoballarini/Downloads/"+fname);
 		//List<String> l= Commons.readFile("/Users/federicoballarini/Downloads/e_high_bonus.in");
@@ -99,8 +98,8 @@ public class Challenge {
 			}
 
 			ArrayList<Vehicle> arrFreeVehicles= new ArrayList<>();
-			
-			
+
+
 			for(Vehicle v: listVehicles) {
 				if(v.r== null) {
 					arrFreeVehicles.add(v);
@@ -112,7 +111,9 @@ public class Challenge {
 						v.r= null;
 				}
 			}
-			
+
+			bestRide(arrFreeVehicles, t, arrTimeRides);
+			/*
 			for(Vehicle v: arrFreeVehicles) {
 				//free vehicle
 				Ride r= bestRide(v, t, arrTimeRides);
@@ -127,10 +128,11 @@ public class Challenge {
 				}
 
 			}
+			 */
 			System.out.println("finish step "+ t+" - free vehicles: "+arrFreeVehicles.size());
 		}
-		
-		
+
+
 		for(Vehicle v: listVehicles) {
 			ArrayList<Integer> arr= v.rideDone;
 			String s;
@@ -142,20 +144,22 @@ public class Challenge {
 			}
 			else
 				s="0";
-			
+
 			result.add(s);
-				
+
 		}
 
 
 		return result;
 	}
-	
-	static void calculateScore(Vehicle v, Ride r, int t){
+
+	static int calculateScore(Vehicle v, Ride r, int t){
+		int score= 0;
 		if((t+ v.distanceToRide)== r.earliestStart) {
-			totalScore+=bonusValue;
+			score+=bonusValue;
 		}
-		totalScore+= r.distanceRide;
+		score+= r.distanceRide;
+		return score;
 	}
 
 	private static Ride createRide(String s) {
@@ -191,60 +195,63 @@ public class Challenge {
 
 	/**
 	 * will find best ride
-	 * @param v vehicle
+	 * @param arrFreeVehicles vehicle
 	 * @param t actual time
 	 * @return
 	 */
-	private static Ride bestRide(Vehicle v, int t, ArrayList<Ride> arrTimeRides) {
-		List<Ride> availableRides= new ArrayList<>();
-		Ride rWin=null;
+	private static void bestRide(ArrayList<Vehicle> arrFreeVehicles, int t, ArrayList<Ride> arrTimeRides) {
+		
+		if(arrTimeRides!=null && arrFreeVehicles.size()!=0) {
+			while(arrTimeRides.size() >0) {
+				chooseBetter(arrTimeRides, arrFreeVehicles, t);
+			}
 
-		if(arrTimeRides!=null) {
-			for(Ride r: arrTimeRides) {
+		}
+	}
+
+	private static void chooseBetter(ArrayList<Ride> arrTimeRides, ArrayList<Vehicle> arrFreeVehicles , int t) {
+
+		int i=0;
+		while(arrTimeRides.size()!=0  && i<arrTimeRides.size()) {
+			
+			Ride r= arrTimeRides.get(i);
+			int maxScore= Integer.MIN_VALUE;
+			Vehicle vWinner=null;
+			for(Vehicle v: arrFreeVehicles) {
+				System.out.println("ciao "+i+ " "+v);
 				v.distanceToRide= Position.difference(v.p, r.startPosition);
 				if((v.distanceToRide + t)>= r.earliestStart) {
 					//start time correct
 					if((v.distanceToRide + t+ r.distanceRide)<= r.latestFinish) {
-						availableRides.add(r);
+						
+						int score= calculateScore(v, r, t);
+						if(score>maxScore) {
+							vWinner= v;
+							maxScore= score;
+							
+						}
 					}
 				}
 			}
-
-			int maxPoints= Integer.MIN_VALUE;
-			for(Ride r: availableRides) {
-				//calculate max 
-				if((r.distanceRide- v.distanceToRide) >maxPoints) {
-					maxPoints= (r.distanceRide- v.distanceToRide);
-					rWin= r;
-				}		
+			if(true) {
+				listRides.remove(r);
+				arrTimeRides.remove(i);
+				totalScore+=maxScore;
+				System.out.println("set ride: "+ r.id +" for vehicle: "+ vWinner.id);
+	
+				vWinner.rideDone.add(r.id);
+				vWinner.setRide(r);
 			}
 
+
+
+			i++;
 		}
 
-		return rWin;
 
 	}
 
 
-	/**
-	 * aggiunge valori a mappa con key che possono avere valori multipli
-	 * @param key 
-	 * @param value da aggiungere
-	 * @param mappadb la mappa
-	 */
-	public static final void addValues(Integer key, Ride value, Map<Integer,ArrayList<Ride>> mappadb) {
-		ArrayList<Ride> tempList = null;
-		if (mappadb.containsKey(key)) {
-			tempList = mappadb.get(key);
-			if(tempList == null)
-				tempList = new ArrayList<Ride>();
-			tempList.add(value);  
-		} else {
-			tempList = new ArrayList<Ride>();
-			tempList.add(value);               
-		}
-		mappadb.put(key,tempList);
-	}
 
 }
 
